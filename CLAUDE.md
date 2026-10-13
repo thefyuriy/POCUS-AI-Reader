@@ -2,7 +2,7 @@
 
 ## Project
 POCUS AI Reader: local-only Mac app (Apple Silicon) for de-identified cardiac POCUS clips; SonoClipShare-like but no accounts/sharing. Owner: Yuriy Bronshteyn, MD (Duke), a **non-technical** user.
-Planned AI: PanEcho (Stage 2) and EchoPrime (Stage 3) run locally, shown side by side. See `docs/STAGES.md`, `docs/DESIGN.md`, `NOTICE.md`.
+AI: PanEcho (Stage 2, built) runs locally. EchoPrime was dropped (Q16: C, licence); a different second RV model is being chosen. See `docs/STAGES.md`, `docs/DESIGN.md`, `NOTICE.md`.
 
 ## First tasks
 1. Verify `LICENSE` exists and is AGPL-3.0 (it was omitted from the ZIP; the repo's license choice should supply it). If missing, add the official text.
@@ -26,7 +26,7 @@ NEVER use formal/informal or official/unofficial to describe any distinction in 
 - Q13: AI runs only after the user clicks Analyze. Q14: background jobs with a progress bar.
 
 - Q15 (asked, not yet answered): PanEcho weights download. Implemented as ask first: Analyze shows a dialog (505 MB, CC BY-NC-SA, research/teaching only) and downloads only after the user clicks. Confirm or change.
-- Q16 (asked, not yet answered): EchoPrime licensing. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai Academic Software License: academic or nonprofit research and education only, no transfer of the software or derivatives to anyone. Nothing from EchoPrime may be copied into this public repo. Waiting for the owner's decision on how to proceed (see docs/STAGES.md, Stage 3).
+- Q16: C. EchoPrime is dropped. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai academic-research-only licence with no transfer of the software or derivatives; nothing from it may enter this public repo. Next: choose another RV model, checking the LICENSE file (not the README) first; see docs/STAGES.md.
 
 ## Open verification items
-PanEcho speed on Mac (CPU: about 3 s per clip on a 4-core Linux box; Mac untested); PanEcho outputs have not been checked against real point-of-care clips (only test patterns were run); resizing the whole frame to 224x224 is our choice, not the authors'; EchoPrime CPU run + `map_location` patch; GitHub Actions macOS minutes (public repo, likely fine).
+PanEcho speed on Mac (CPU: about 3 s per clip on a 4-core Linux box; Mac untested); PanEcho outputs have not been checked against real point-of-care clips (only test patterns were run); resizing the whole frame to 224x224 is our choice, not the authors'; GitHub Actions macOS minutes (public repo, likely fine).

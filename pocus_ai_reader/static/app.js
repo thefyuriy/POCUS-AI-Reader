@@ -807,9 +807,7 @@ async function renderViewer(aid, cid) {
           panechoClip ? "Analyze this clip again" : "Analyze this clip")
         : h("p", { class: "muted small" }, "Still images are not analyzed."),
       panechoView || h("p", { class: "muted small" }, "Nothing has been analyzed yet. AI only runs when you click Analyze."),
-      h("div", { class: "model" }, h("h3", null, "EchoPrime"),
-        h("p", null, "A second opinion from a different model, with its own view check. Planned after PanEcho.")),
-      h("p", { class: "caveat" }, "Both models were trained on consultative echocardiograms. Their accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
+      h("p", { class: "caveat" }, "PanEcho was trained on consultative echocardiograms. Its accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
 
   appEl.replaceChildren(
     h("div", { class: "navrow" },

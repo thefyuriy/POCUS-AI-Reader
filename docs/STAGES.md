@@ -12,15 +12,10 @@ Library, upload (drag-drop + button), viewer, tags/notes, export/import, securit
 - Verify speed on Apple Silicon (upstream docs mention only Linux/NVIDIA). Run in a background job with progress.
 - Store results in each clip's `results.panecho`; set `ai_status` in the summary.
 
-## Stage 3: EchoPrime (second opinion instead of RV-Net) - BLOCKED on licensing (Q16)
-- **Licence finding (2026-10-13):** the README says MIT, but the LICENSE file in echonet/EchoPrime (commit 03874a5) is the Cedars-Sinai Academic Software License: use only by academic or nonprofit researchers, only for educational or academic research, no transfer of the software or any derivative to anyone, a required acknowledgment in any publication, commercial use via CSTechTransfer@cshs.org. Treat the LICENSE file as binding. Do not vendor or port its code into this AGPL repo; any integration must fetch it from the authors at the user's request and show these terms first.
-- **Size:** the full download is about 3.9 GB (model_data.zip 1.34 GB + two candidate-embedding files 1.26 GB each). It predicts by finding the 50 most similar of ~230k reference studies and averaging their findings, so the reference data is needed even for the RV phenotypes.
-- **Dependencies:** its code imports transformers, pydicom, opencv, sklearn, matplotlib at module level and loads weights with cwd-relative paths; the view classifier `torch.load` has no `map_location` (fails on a Mac without CUDA).
-- MViT-v2-S encoder, 11-view classifier, kNN over ~230k reference studies; large model_data from GitHub Releases v1.0.0.
-- Code selects only cuda/cpu: run on CPU (or patch for MPS). The view-classifier `torch.load` lacks `map_location`: patch to CPU.
-- Phenotypes of interest: rv_systolic_function_depressed, right_ventricle_dilation, right_atrium_dilation, dilated_ivc, pericardial_effusion, ejection_fraction. Use `roc_thresholds.csv`.
-- UI: PanEcho and EchoPrime side by side per clip.
-- Concordance rule (user Q9) and view-mismatch warning (user Q10): when EchoPrime's predicted view differs from the manual tag, warn. Reconfirm exact wording with the user before building.
+## Stage 3: second RV assessment - EchoPrime DROPPED (Q16: C); replacement not yet chosen
+- **Why EchoPrime was dropped (2026-10-13):** its README says MIT, but the LICENSE file in echonet/EchoPrime (commit 03874a5) is the Cedars-Sinai Academic Software License: only academic or nonprofit researchers, only for educational or academic research, no transfer of the software or any derivative to anyone, a required acknowledgment in any publication, commercial use via CSTechTransfer@cshs.org. That conflicts with a public AGPL repository. Also about 3.9 GB of downloads and a view classifier that fails without CUDA.
+- **Rule for the replacement:** read the LICENSE file in the repository and on the weights' download page before building; the README alone is not enough. Nothing from it may be copied into this repo unless the licence allows it; fetch from the authors at the user's request with hash checks, as PanEcho does.
+- Phenotypes of interest, for choosing a model: RV systolic function, RV size, RA size, IVC size, pericardial effusion, EF.
 
 ## Decisions from Q13 and Q14
 - AI runs only when the user clicks **Analyze** (per clip or per archive), never automatically after upload.

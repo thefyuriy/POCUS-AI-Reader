@@ -8,7 +8,7 @@ archives of clips, tags, notes, a frame-stepping viewer and a dashboard. Nothing
 
 ## Status
 - Stage 1 (this release): library, upload, viewer, export/import. AI panels are placeholders.
-- Stage 2: PanEcho results. Stage 3: EchoPrime second opinion, shown side by side. See `docs/STAGES.md`.
+- Stage 2 (built): PanEcho results. A second RV assessment is still being chosen; see `docs/STAGES.md`.
 
 ## Install (Apple Silicon Mac)
 1. On GitHub open the **Actions** tab, click the latest green "Build Mac app" run, and download
