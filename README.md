@@ -16,6 +16,9 @@ archives of clips, tags, notes, a frame-stepping viewer and a dashboard. Nothing
 2. Open the `.dmg` and drag **POCUS AI Reader** onto **Applications**.
 3. The app is not signed by Apple. The first time, right-click it in Applications, choose **Open**, then **Open** again.
 
+## Supported files
+MP4, M4V, MOV, WEBM, AVI, and JPG/PNG/GIF stills. AVI files are converted to MP4 (H.264, near-lossless, no audio) when you add them, because the app window cannot play AVI; the original AVI is not kept, so keep your own copy.
+
 ## Where your data lives
 `~/Library/Application Support/POCUS AI Reader` (deliberately outside iCloud-synced folders).
 Use **Export library** / **Import library** (a ZIP) to move clips between Macs. Exports go to Downloads.

@@ -3,17 +3,19 @@
 # Verified to build and start on Linux; the macOS build runs in GitHub Actions.
 import os
 
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))  # SPECPATH is provided by PyInstaller
 
+av_datas, av_binaries, av_hidden = collect_all("av")
 hidden = (collect_submodules("uvicorn") + collect_submodules("starlette")
-          + ["multipart", "webview", "anyio._backends._asyncio"])
+          + ["multipart", "webview", "anyio._backends._asyncio"] + av_hidden)
 
 a = Analysis(
     [os.path.join(SPECPATH, "run_app.py")],
     pathex=[ROOT],
-    datas=[(os.path.join(ROOT, "pocus_ai_reader", "static"), "pocus_ai_reader/static")],
+    binaries=av_binaries,
+    datas=[(os.path.join(ROOT, "pocus_ai_reader", "static"), "pocus_ai_reader/static")] + av_datas,
     hiddenimports=hidden,
 )
 pyz = PYZ(a.pure)

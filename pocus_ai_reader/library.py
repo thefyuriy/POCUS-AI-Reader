@@ -24,11 +24,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO, Iterable
 
+from .convert import ConversionError, avi_to_mp4
+
 SCHEMA_VERSION = 1
 VIEWS = ["PLAX", "PSAX", "A4C", "SC4C", "IVC", "Other"]
 CLIP_EXTS = {".mp4", ".m4v", ".mov", ".webm"}
 STILL_EXTS = {".jpg", ".jpeg", ".png", ".gif"}
-ALLOWED_EXTS = CLIP_EXTS | STILL_EXTS
+ALLOWED_EXTS = CLIP_EXTS | STILL_EXTS  # what can be stored and played
+CONVERT_EXTS = {".avi"}                 # accepted on upload, converted to MP4 first
+UPLOAD_EXTS = ALLOWED_EXTS | CONVERT_EXTS
 ID_RE = re.compile(r"^[0-9a-f]{32}$")
 MAX_TAGS = 30
 MAX_NOTES = 20_000
@@ -156,10 +160,10 @@ def guess_view(filename) -> str:
 
 def file_ext(filename) -> str:
     ext = Path(clean_filename(filename)).suffix.lower()
-    if ext not in ALLOWED_EXTS:
+    if ext not in UPLOAD_EXTS:
         raise LibraryError(
             f"'{clean_filename(filename)}' is not a supported file type. "
-            "Use MP4, M4V, MOV, WEBM, JPG, PNG or GIF.",
+            "Use MP4, M4V, MOV, AVI, WEBM, JPG, PNG or GIF.",
             415,
         )
     return ext
@@ -332,7 +336,8 @@ class Library:
         cid = new_id()
         media_dir = self.archive_dir(aid) / "media"
         media_dir.mkdir(exist_ok=True)
-        dest = media_dir / f"{cid}{ext}"
+        converting = ext in CONVERT_EXTS
+        dest = media_dir / (f"{cid}.upload{ext}" if converting else f"{cid}{ext}")
         size, limit = 0, max_file_bytes()
         try:
             with dest.open("wb") as out:
@@ -349,6 +354,18 @@ class Library:
         except BaseException:
             dest.unlink(missing_ok=True)
             raise
+        thumb = b""
+        if converting:
+            # The window cannot play AVI: keep an H.264 MP4 instead (see convert.py).
+            ext = ".mp4"
+            final = media_dir / f"{cid}{ext}"
+            try:
+                thumb = avi_to_mp4(dest, final)
+                size = final.stat().st_size
+            except ConversionError as err:
+                raise LibraryError(f"'{clean_filename(filename)}': {err}", 415) from err
+            finally:
+                dest.unlink(missing_ok=True)
         clip = {
             "id": cid,
             "filename": clean_filename(filename),
@@ -359,9 +376,13 @@ class Library:
             "notes": "",
             "size": size,
             "added": now_iso(),
-            "has_thumb": False,
+            "has_thumb": bool(thumb),
             "results": {},
         }
+        if thumb:
+            thumbs = self.archive_dir(aid) / "thumbs"
+            thumbs.mkdir(exist_ok=True)
+            (thumbs / f"{cid}.jpg").write_bytes(thumb)
         with self._lock:
             a = self.read_archive(aid)
             a["clips"].append(clip)

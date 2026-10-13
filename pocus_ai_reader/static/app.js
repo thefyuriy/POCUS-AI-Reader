@@ -273,10 +273,10 @@ async function openUploadDialog(rawFiles, targetArchive) {
   const files = rawFiles.filter(isSupported);
   const skipped = rawFiles.length - files.length;
   if (!files.length) {
-    toast("No supported files found. Use MP4, M4V, MOV, WEBM, JPG, PNG or GIF.", { error: true });
+    toast("No supported files found. Use MP4, M4V, MOV, AVI, WEBM, JPG, PNG or GIF.", { error: true });
     return;
   }
-  if (skipped) toast(`Skipped ${plural(skipped, "file", "files")} that are not MP4, MOV, WEBM or image files.`);
+  if (skipped) toast(`Skipped ${plural(skipped, "file", "files")} that are not MP4, MOV, AVI, WEBM or image files.`);
 
   let guesses = files.map(() => "");
   try { guesses = (await api("POST", "/api/guess-views", { names: files.map((f) => f.name) })).views; } catch { /* manual tags still work */ }
@@ -355,7 +355,7 @@ async function openUploadDialog(rawFiles, targetArchive) {
     for (const row of rows) { form.append("files", row.file, row.file.name); form.append("views", row.view || ""); }
     try {
       const url = targetArchive ? `/api/archives/${targetArchive.id}/clips` : "/api/archives";
-      const result = await sendForm("POST", url, form, (p) => { bar.value = p; status.textContent = `Uploading… ${Math.round(p * 100)}%`; });
+      const result = await sendForm("POST", url, form, (p) => { bar.value = p; status.textContent = p >= 1 ? "Processing… AVI files are converted to MP4, which can take a minute." : `Uploading… ${Math.round(p * 100)}%`; });
       status.textContent = "Creating previews…";
       bar.removeAttribute("value");
       await uploadThumbnails(result.id, result.new_clip_ids, rows.map((r) => r.blob));

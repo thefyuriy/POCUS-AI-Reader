@@ -26,7 +26,7 @@ from starlette.staticfiles import StaticFiles
 
 from . import __version__, transfer
 from .library import (
-    ALLOWED_EXTS,
+    UPLOAD_EXTS,
     MAX_LABEL,
     MAX_THUMB_BYTES,
     MEDIA_TYPES,
@@ -106,7 +106,7 @@ def create_app(library: Library, token: str, port: int, export_dir: Path | None 
         return JSONResponse({
             "version": __version__,
             "views": VIEWS,
-            "extensions": sorted(ALLOWED_EXTS),
+            "extensions": sorted(UPLOAD_EXTS),
             "library_path": str(library.root),
             "export_path": str(export_folder),
             "can_reveal": allow_reveal and sys.platform == "darwin",
