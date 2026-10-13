@@ -14,7 +14,7 @@ AI: PanEcho (Stage 2, built) runs locally. EchoPrime was dropped (Q16: C, licenc
 ## User constraints
 - No Terminal, no Node.js; click-by-click plain instructions; must work from either Mac (both Apple Silicon).
 - Concise, precise; point out contradictions in requests directly.
-- Number questions consecutively across batches; never reuse a Q number (last used: Q16).
+- Number questions consecutively across batches; never reuse a Q number (last used: Q17).
 - For fix/revise requests: open a PR, commit subject under 60 chars; after pushing rewrite PR title/body into a real summary (what changed, how tested, what is not covered).
 - Commits end with `Co-Authored-By:` and `Claude-Session:` lines; PRs per the session reminder.
 - Repo is public. Models are downloaded on first launch, never bundled. Default library outside iCloud-synced folders.
@@ -26,7 +26,7 @@ NEVER use formal/informal or official/unofficial to describe any distinction in 
 - Q13: AI runs only after the user clicks Analyze. Q14: background jobs with a progress bar.
 
 - Q15 (asked, not yet answered): PanEcho weights download. Implemented as ask first: Analyze shows a dialog (505 MB, CC BY-NC-SA, research/teaching only) and downloads only after the user clicks. Confirm or change.
-- Q16: C. EchoPrime is dropped. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai academic-research-only licence with no transfer of the software or derivatives; nothing from it may enter this public repo. Next: choose another RV model, checking the LICENSE file (not the README) first; see docs/STAGES.md.
+- Q16: C. EchoPrime is dropped. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai academic-research-only licence with no transfer of the software or derivatives; nothing from it may enter this public repo. Next: best candidate is echonet/RV (EchoNet-RV, A4C RVFAC + segmentation) but it has NO licence file, so written permission from the authors is needed first (Q17: owner to decide whether to email them). See docs/STAGES.md.
 
 ## Open verification items
 PanEcho speed on Mac (CPU: about 3 s per clip on a 4-core Linux box; Mac untested); PanEcho outputs have not been checked against real point-of-care clips (only test patterns were run); resizing the whole frame to 224x224 is our choice, not the authors'; GitHub Actions macOS minutes (public repo, likely fine).
