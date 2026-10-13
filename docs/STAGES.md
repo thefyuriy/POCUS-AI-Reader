@@ -3,8 +3,10 @@
 ## Stage 1 (built)
 Library, upload (drag-drop + button), viewer, tags/notes, export/import, security guard, packaging + CI.
 
-## Stage 2: PanEcho
-- Load via torch.hub (CarDS-Yale/PanEcho); 16 frames, 224x224, ImageNet-normalized; 39 tasks.
+## Stage 2: PanEcho (built; verify on a Mac and on real clips)
+- Not loaded via torch.hub: the app downloads PanEcho's `src/models.py` (pinned commit) and `panecho.pt` (release v1.0) on first Analyze, checks SHA-256 of both, and builds the model itself (`pocus_ai_reader/panecho.py`). Reason: pinned, no unpinned pickle download, nothing copied into this repo (the PanEcho repo has no LICENSE file). 16 frames, 224x224, ImageNet-normalized; 40 task heads (the authors say 39).
+- Preprocessing follows the authors' `EchoDataset`: consecutive 16-frame windows (4 evenly spaced), BGR channel order as OpenCV gives, predictions averaged. Whole-frame resize to 224x224 is our choice and is unvalidated.
+- Study level = mean over the archive's clips (the authors aggregate over a study's views).
 - No view classifier: use the user's manual view tag.
 - Weights are CC BY-NC-SA 4.0: show attribution + non-commercial note. Download on first use, not bundled.
 - Verify speed on Apple Silicon (upstream docs mention only Linux/NVIDIA). Run in a background job with progress.

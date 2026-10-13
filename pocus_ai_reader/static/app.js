@@ -141,9 +141,131 @@ function confirmDialog({ title, body, confirmLabel, danger = false }) {
   });
 }
 
-function analyze(scope) {
-  // Stage 2 (PanEcho) is not built yet. The button exists so the workflow is visible; it never runs anything on its own.
-  toast(`Analyze ${scope} is not available yet: the AI models are not installed in this version. PanEcho comes next.`);
+/* ------------------------------------------------------------------- AI jobs */
+
+const jobBar = document.getElementById("jobbar");
+let pendingAnalyze = null;   // an Analyze the person asked for while PanEcho was still downloading
+let jobTimer = null;
+let dismissTimer = null;
+
+function paintJob(job) {
+  clearTimeout(dismissTimer);
+  if (!job || (job.state !== "running" && job.state !== "queued" && job.dismissed)) { jobBar.hidden = true; return; }
+  const active = job.state === "running" || job.state === "queued";
+  const dismiss = () => { jobBar.hidden = true; if (state.lastJob) state.lastJob.dismissed = true; };
+  const kids = [h("div", { class: "jobline" },
+    h("strong", null, job.title),
+    h("span", { class: "muted small" }, job.state === "failed" ? job.error : job.message))];
+  if (active) {
+    kids.push(h("progress", { max: "1", value: String(job.progress), "aria-label": job.title }));
+    kids.push(h("button", { class: "btn small", type: "button", onclick: () => api("POST", `/api/jobs/${job.id}/cancel`).catch(() => {}) }, "Cancel"));
+  } else {
+    kids.push(h("button", { class: "btn small", type: "button", onclick: dismiss }, "Dismiss"));
+    if (job.state === "done") dismissTimer = setTimeout(dismiss, 6000);
+  }
+  jobBar.className = `jobbar ${job.state}`;
+  jobBar.replaceChildren(...kids);
+  jobBar.hidden = false;
+}
+
+async function pollJob() {
+  clearTimeout(jobTimer);
+  let job;
+  try { job = await api("GET", "/api/jobs/current"); } catch { jobTimer = setTimeout(pollJob, 2000); return; }
+  const previous = state.lastJob;
+  if (job && previous && previous.id === job.id && previous.dismissed) job.dismissed = true;
+  state.lastJob = job;
+  if (!job) { jobBar.hidden = true; return; }
+  paintJob(job);
+  if (job.state === "running" || job.state === "queued") { jobTimer = setTimeout(pollJob, 1000); return; }
+  const finishedNow = !previous || previous.id !== job.id || previous.state === "running" || previous.state === "queued";
+  if (!finishedNow) return;
+  if (job.kind === "download" && job.state === "done" && pendingAnalyze) {
+    const next = pendingAnalyze; pendingAnalyze = null;
+    startAnalyze(next.archiveId, next.clipIds, true);
+  } else if (job.kind === "analyze" && job.state === "done") {
+    const aid = currentArchiveId();
+    if (aid && aid === job.archive_id || /^#\/archive\/[0-9a-f]{32}\/clip\//.test(location.hash)) render();
+  }
+  if (job.state !== "done") pendingAnalyze = null;
+}
+
+async function startAnalyze(archiveId, clipIds, afterDownload = false) {
+  try {
+    const status = await api("GET", "/api/ai/status");
+    state.ai = status;
+    if (!status.installed) {
+      if (afterDownload) throw new Error("PanEcho could not be installed.");
+      const ok = await confirmDialog({
+        title: "Download PanEcho?",
+        body: `Analyze needs the PanEcho model (${status.download_mb} MB), a one-time download from its authors at Yale. ` +
+          "After that, analysis runs on this Mac and your clips never leave it. " +
+          `The model is licensed ${status.license}: for research and teaching only, not for clinical use.`,
+        confirmLabel: `Download ${status.download_mb} MB`,
+      });
+      if (!ok) return;
+      pendingAnalyze = { archiveId, clipIds };
+      await api("POST", "/api/ai/download");
+    } else {
+      await api("POST", "/api/ai/analyze", { archive_id: archiveId, clip_ids: clipIds });
+    }
+    pollJob();
+  } catch (e) {
+    pendingAnalyze = null;
+    toast(e.message, { error: true });
+  }
+}
+
+/* ---------------------------------------------------------- PanEcho results */
+
+const KEY_TASKS = ["EF", "LVSystolicFunction", "LVSize", "RVSize", "RVSystolicFunction", "RASize",
+  "RAP-8-or-higher", "pericardial-effusion", "TAPSE", "RVSP", "TVRegurgitation"];
+const pct = (p) => `${Math.round(p * 100)}%`;
+const niceClass = (c) => String(c).replace(/\|/g, " / ");
+
+function taskText(task, r) {
+  if (!r || typeof r !== "object") return null;
+  if (task.type === "regression" && Number.isFinite(r.value)) {
+    const units = task.units && task.units !== "N/A" ? ` ${task.units}` : "";
+    return { main: `${Math.abs(r.value) >= 100 ? r.value.toFixed(0) : r.value.toFixed(1)}${units}` };
+  }
+  if (task.type === "binary_classification" && Number.isFinite(r.p)) {
+    return { main: `${niceClass(task.positive)}: ${pct(r.p)}`, detail: "model probability" };
+  }
+  if (r.probs && typeof r.probs === "object") {
+    const entries = Object.entries(r.probs).filter(([, v]) => Number.isFinite(v)).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) return null;
+    return { main: `${niceClass(entries[0][0])}: ${pct(entries[0][1])}`, detail: entries.slice(1).map(([k, v]) => `${niceClass(k)} ${pct(v)}`).join(", ") };
+  }
+  return null;
+}
+
+function resultRows(tasks, results, names) {
+  return h("table", { class: "results" }, h("tbody", null, names.map((name) => {
+    const task = tasks.find((t) => t.name === name);
+    const text = task && taskText(task, results[name]);
+    if (!text) return null;
+    return h("tr", null, h("th", { scope: "row" }, task.label),
+      h("td", null, h("span", { class: "val" }, text.main), text.detail ? h("span", { class: "muted small" }, ` ${text.detail}`) : null));
+  })));
+}
+
+function panechoResults(tasks, data, heading) {
+  const results = (data && data.tasks) || {};
+  const all = tasks.map((t) => t.name).filter((n) => results[n]);
+  if (!all.length) return null;
+  const key = KEY_TASKS.filter((n) => results[n]);
+  const rest = all.filter((n) => !KEY_TASKS.includes(n));
+  return h("div", { class: "panecho" },
+    h("h3", null, heading),
+    resultRows(tasks, results, key),
+    rest.length ? h("details", null, h("summary", null, `All other measurements (${rest.length})`), resultRows(tasks, results, rest)) : null,
+    h("p", { class: "muted small" }, "Model output for teaching and research, not a diagnosis. Check it against the clip yourself."));
+}
+
+async function aiTasks() {
+  if (!state.ai) state.ai = await api("GET", "/api/ai/status");
+  return state.ai.tasks;
 }
 
 /* ------------------------------------------------------------- components */
@@ -198,7 +320,7 @@ function archiveTile(a) {
       h("div", { class: "name" }, a.label),
       h("div", { class: "line" }, `Created ${formatDate(a.created)}`),
       a.tags.length ? h("div", { class: "line" }, a.tags.slice(0, 6).map((t) => `#${t}`).join("  ")) : null,
-      h("div", { class: "line" }, "AI not run yet")));
+      h("div", { class: "line" }, { analyzed: "PanEcho analyzed", partial: "PanEcho run on some clips" }[a.ai_status] || "AI not run yet")));
 }
 
 function clipTile(archive, clip) {
@@ -523,6 +645,9 @@ async function renderArchive(aid) {
   notes.addEventListener("blur", (e) => saveNotes.flush(e.target.value));
 
   const sheet = h("div", { class: "sheet" }, a.clips.map((c) => clipTile(a, c)));
+  const study = a.panecho_study
+    ? panechoResults(await aiTasks(), a.panecho_study, `PanEcho: whole archive (average of ${plural(a.panecho_study.clips, "clip", "clips")})`)
+    : null;
   appEl.replaceChildren(
     h("a", { class: "back", href: "#/" }, "Back to library"),
     title,
@@ -532,12 +657,13 @@ async function renderArchive(aid) {
       tagEditor(a.tags, (tags) => save({ tags }))),
     h("div", { class: "actions" },
       h("button", { class: "btn primary", type: "button", onclick: chooseFiles }, "Add files"),
-      h("button", { class: "btn primary", type: "button", onclick: () => analyze("archive") }, "Analyze archive"),
+      h("button", { class: "btn primary", type: "button", onclick: () => startAnalyze(aid, null) }, "Analyze archive"),
       h("button", { class: "btn", type: "button", onclick: () => exportArchives([aid]) }, "Export this archive"),
       h("button", { class: "btn danger", type: "button", onclick: async () => {
         if (!(await confirmDialog({ title: "Delete this archive?", body: `“${a.label}” and all ${a.clips.length} of its files will be removed from this computer. This can't be undone.`, confirmLabel: "Delete archive", danger: true }))) return;
         try { await api("DELETE", `/api/archives/${aid}`); toast("Archive deleted."); location.hash = "#/"; } catch (e) { toast(e.message, { error: true }); }
       } }, "Delete archive")),
+    ...(study ? [study] : []),   // replaceChildren turns null into the text "null"
     sheet);
 }
 
@@ -617,6 +743,9 @@ async function renderViewer(aid, cid) {
   notes.addEventListener("input", (e) => saveNotes(e.target.value));
   notes.addEventListener("blur", (e) => saveNotes.flush(e.target.value));
 
+  const panechoClip = clip.results && clip.results.panecho;
+  const panechoView = panechoClip ? panechoResults(await aiTasks(), panechoClip, `PanEcho, analyzed ${formatDate(panechoClip.analyzed)}`) : null;
+
   const side = h("div", { class: "side" },
     h("div", { class: "side-head" },
       h("span", { class: "name" }, clip.filename),
@@ -637,10 +766,11 @@ async function renderViewer(aid, cid) {
     } }, "Delete this clip")),
     h("div", { class: "ai" },
       h("h2", null, "AI interpretation"),
-      h("button", { class: "btn primary", type: "button", onclick: () => analyze("clip") }, "Analyze this clip"),
-      h("p", { class: "muted small" }, "AI is not turned on in this version. It will only run when you click Analyze."),
-      h("div", { class: "model" }, h("h3", null, "PanEcho"),
-        h("p", null, "Reads every view in the archive and reports left and right heart findings. Planned for the next release.")),
+      clip.kind === "clip"
+        ? h("button", { class: "btn primary", type: "button", onclick: () => startAnalyze(aid, [cid]) },
+          panechoClip ? "Analyze this clip again" : "Analyze this clip")
+        : h("p", { class: "muted small" }, "Still images are not analyzed."),
+      panechoView || h("p", { class: "muted small" }, "Nothing has been analyzed yet. AI only runs when you click Analyze."),
       h("div", { class: "model" }, h("h3", null, "EchoPrime"),
         h("p", null, "A second opinion from a different model, with its own view check. Planned after PanEcho.")),
       h("p", { class: "caveat" }, "Both models were trained on consultative echocardiograms. Their accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
@@ -708,6 +838,7 @@ async function boot() {
   }
   installTopbar();
   installDropTarget();
+  pollJob();   // pick up a job that is already running (for example after a reload)
   window.addEventListener("hashchange", render);
   render();
 }

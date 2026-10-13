@@ -8,14 +8,17 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))  # SPECPATH is provided by PyInstaller
 
 av_datas, av_binaries, av_hidden = collect_all("av")
+# torchvision loads its compiled operators (torchvision::nms ...) from .so files that are not Python imports
+tv_datas, tv_binaries, tv_hidden = collect_all("torchvision")
 hidden = (collect_submodules("uvicorn") + collect_submodules("starlette")
-          + ["multipart", "webview", "anyio._backends._asyncio"] + av_hidden)
+          + ["multipart", "webview", "anyio._backends._asyncio"] + av_hidden + tv_hidden)
 
 a = Analysis(
     [os.path.join(SPECPATH, "run_app.py")],
     pathex=[ROOT],
-    binaries=av_binaries,
-    datas=[(os.path.join(ROOT, "pocus_ai_reader", "static"), "pocus_ai_reader/static")] + av_datas,
+    binaries=av_binaries + tv_binaries,
+    datas=[(os.path.join(ROOT, "pocus_ai_reader", "static"), "pocus_ai_reader/static"),
+           (os.path.join(ROOT, "pocus_ai_reader", "panecho_tasks.json"), "pocus_ai_reader")] + av_datas + tv_datas,
     hiddenimports=hidden,
 )
 pyz = PYZ(a.pure)
