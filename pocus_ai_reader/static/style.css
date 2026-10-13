@@ -194,10 +194,10 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
 
 /* ---- archive page ------------------------------------------------------ */
 
-.back { display: inline-block; color: var(--fog); font-size: 14px; text-decoration: none; margin-bottom: 12px; }
+.back { display: block; width: fit-content; color: var(--fog); font-size: 14px; text-decoration: none; margin-bottom: 12px; }
 .back:hover { color: var(--chalk); }
 
-.title-input {
+input.title-input {
   width: 100%;
   max-width: 760px;
   font: 600 28px/1.2 var(--ui);
@@ -208,8 +208,8 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
   border-color: transparent;
   color: var(--chalk);
 }
-.title-input:hover { border-color: var(--rule); }
-.title-input:focus { background: var(--slate); border-color: var(--rule); }
+input.title-input:hover { border-color: var(--rule); }
+input.title-input:focus { background: var(--slate); border-color: var(--rule); }
 
 .meta-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; max-width: 920px; margin: 14px 0 18px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 30px; }

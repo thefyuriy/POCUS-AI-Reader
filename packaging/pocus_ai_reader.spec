@@ -1,15 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # PyInstaller spec. Run from the repo root:  pyinstaller packaging/pocus_ai_reader.spec
-# UNTESTED until the first GitHub Actions run; see CLAUDE.md.
+# Verified to build and start on Linux; the macOS build runs in GitHub Actions.
+import os
+
 from PyInstaller.utils.hooks import collect_submodules
+
+ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))  # SPECPATH is provided by PyInstaller
 
 hidden = (collect_submodules("uvicorn") + collect_submodules("starlette")
           + ["multipart", "webview", "anyio._backends._asyncio"])
 
 a = Analysis(
-    ["run_app.py"],
-    pathex=[".."],
-    datas=[("../pocus_ai_reader/static", "pocus_ai_reader/static")],
+    [os.path.join(SPECPATH, "run_app.py")],
+    pathex=[ROOT],
+    datas=[(os.path.join(ROOT, "pocus_ai_reader", "static"), "pocus_ai_reader/static")],
     hiddenimports=hidden,
 )
 pyz = PYZ(a.pure)
