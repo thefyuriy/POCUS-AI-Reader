@@ -12,7 +12,10 @@ Library, upload (drag-drop + button), viewer, tags/notes, export/import, securit
 - Verify speed on Apple Silicon (upstream docs mention only Linux/NVIDIA). Run in a background job with progress.
 - Store results in each clip's `results.panecho`; set `ai_status` in the summary.
 
-## Stage 3: EchoPrime (second opinion instead of RV-Net)
+## Stage 3: EchoPrime (second opinion instead of RV-Net) - BLOCKED on licensing (Q16)
+- **Licence finding (2026-10-13):** the README says MIT, but the LICENSE file in echonet/EchoPrime (commit 03874a5) is the Cedars-Sinai Academic Software License: use only by academic or nonprofit researchers, only for educational or academic research, no transfer of the software or any derivative to anyone, a required acknowledgment in any publication, commercial use via CSTechTransfer@cshs.org. Treat the LICENSE file as binding. Do not vendor or port its code into this AGPL repo; any integration must fetch it from the authors at the user's request and show these terms first.
+- **Size:** the full download is about 3.9 GB (model_data.zip 1.34 GB + two candidate-embedding files 1.26 GB each). It predicts by finding the 50 most similar of ~230k reference studies and averaging their findings, so the reference data is needed even for the RV phenotypes.
+- **Dependencies:** its code imports transformers, pydicom, opencv, sklearn, matplotlib at module level and loads weights with cwd-relative paths; the view classifier `torch.load` has no `map_location` (fails on a Mac without CUDA).
 - MViT-v2-S encoder, 11-view classifier, kNN over ~230k reference studies; large model_data from GitHub Releases v1.0.0.
 - Code selects only cuda/cpu: run on CPU (or patch for MPS). The view-classifier `torch.load` lacks `map_location`: patch to CPU.
 - Phenotypes of interest: rv_systolic_function_depressed, right_ventricle_dilation, right_atrium_dilation, dilated_ivc, pericardial_effusion, ejection_fraction. Use `roc_thresholds.csv`.

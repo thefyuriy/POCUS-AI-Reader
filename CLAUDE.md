@@ -14,7 +14,7 @@ Planned AI: PanEcho (Stage 2) and EchoPrime (Stage 3) run locally, shown side by
 ## User constraints
 - No Terminal, no Node.js; click-by-click plain instructions; must work from either Mac (both Apple Silicon).
 - Concise, precise; point out contradictions in requests directly.
-- Number questions consecutively across batches; never reuse a Q number (last used: Q15).
+- Number questions consecutively across batches; never reuse a Q number (last used: Q16).
 - For fix/revise requests: open a PR, commit subject under 60 chars; after pushing rewrite PR title/body into a real summary (what changed, how tested, what is not covered).
 - Commits end with `Co-Authored-By:` and `Claude-Session:` lines; PRs per the session reminder.
 - Repo is public. Models are downloaded on first launch, never bundled. Default library outside iCloud-synced folders.
@@ -26,6 +26,7 @@ NEVER use formal/informal or official/unofficial to describe any distinction in 
 - Q13: AI runs only after the user clicks Analyze. Q14: background jobs with a progress bar.
 
 - Q15 (asked, not yet answered): PanEcho weights download. Implemented as ask first: Analyze shows a dialog (505 MB, CC BY-NC-SA, research/teaching only) and downloads only after the user clicks. Confirm or change.
+- Q16 (asked, not yet answered): EchoPrime licensing. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai Academic Software License: academic or nonprofit research and education only, no transfer of the software or derivatives to anyone. Nothing from EchoPrime may be copied into this public repo. Waiting for the owner's decision on how to proceed (see docs/STAGES.md, Stage 3).
 
 ## Open verification items
 PanEcho speed on Mac (CPU: about 3 s per clip on a 4-core Linux box; Mac untested); PanEcho outputs have not been checked against real point-of-care clips (only test patterns were run); resizing the whole frame to 224x224 is our choice, not the authors'; EchoPrime CPU run + `map_location` patch; GitHub Actions macOS minutes (public repo, likely fine).
