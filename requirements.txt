@@ -2,4 +2,8 @@ starlette>=0.37
 uvicorn>=0.30
 python-multipart>=0.0.9
 av>=13
+numpy>=1.26
+torch>=2.2
+torchvision>=0.17
+certifi
 pywebview>=5.0; sys_platform == "darwin"

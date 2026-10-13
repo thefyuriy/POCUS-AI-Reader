@@ -1,0 +1,373 @@
+{
+ "commit": "836c46ef6bc4eace50b7dc36704ecef2d33affde",
+ "tasks": [
+  {
+   "name": "pericardial-effusion",
+   "type": "binary_classification",
+   "classes": [
+    "Mild, moderate or severe",
+    "none_trace"
+   ],
+   "units": "",
+   "label": "Pericardial effusion",
+   "positive": "Mild, moderate or severe",
+   "negative": "None or trace"
+  },
+  {
+   "name": "EF",
+   "type": "regression",
+   "classes": [],
+   "units": "%",
+   "label": "Left ventricular (LV) ejection fraction"
+  },
+  {
+   "name": "GLS",
+   "type": "regression",
+   "classes": [],
+   "units": "%",
+   "label": "Global longitudinal strain (GLS)"
+  },
+  {
+   "name": "LVEDV",
+   "type": "regression",
+   "classes": [],
+   "units": "cm^3",
+   "label": "LV end-diastolic volume"
+  },
+  {
+   "name": "LVESV",
+   "type": "regression",
+   "classes": [],
+   "units": "cm^3",
+   "label": "LV end-systolic volume"
+  },
+  {
+   "name": "LVSV",
+   "type": "regression",
+   "classes": [],
+   "units": "cm^3",
+   "label": "LV stroke volume"
+  },
+  {
+   "name": "LVSize",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mildly Increased",
+    "Moderately|Severely Increased",
+    "Normal"
+   ],
+   "units": "",
+   "label": "LV size"
+  },
+  {
+   "name": "LVWallThickness-increased-any",
+   "type": "binary_classification",
+   "classes": [
+    "Increased",
+    "Normal"
+   ],
+   "units": "",
+   "label": "Any level of LV hypertrophy (increased wall thickness)",
+   "positive": "Increased",
+   "negative": "Normal"
+  },
+  {
+   "name": "LVWallThickness-increased-modsev",
+   "type": "binary_classification",
+   "classes": [
+    "Moderately|severely increased",
+    "Normal or mildly increased"
+   ],
+   "units": "",
+   "label": "Moderate or greater LV hypertrophy (increased wall thickness)",
+   "positive": "Moderately or severely increased",
+   "negative": "Normal or mildly increased"
+  },
+  {
+   "name": "LVSystolicFunction",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mildly Decreased",
+    "Moderately|Severely Decreased",
+    "Normal|Hyperdynamic"
+   ],
+   "units": "",
+   "label": "LV systolic function"
+  },
+  {
+   "name": "LVWallMotionAbnormalities",
+   "type": "binary_classification",
+   "classes": [
+    "None",
+    "Present"
+   ],
+   "units": "",
+   "label": "LV wall motion abnormalities",
+   "positive": "Present",
+   "negative": "None"
+  },
+  {
+   "name": "IVSd",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LV intraventricular septum thickness at diastole"
+  },
+  {
+   "name": "LVPWd",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LV posterior wall thickness at diastole"
+  },
+  {
+   "name": "LVIDs",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LV internal diameter at systole"
+  },
+  {
+   "name": "LVIDd",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LV internal diameter at diastole"
+  },
+  {
+   "name": "LVOTDiam",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LV outflow tract diameter"
+  },
+  {
+   "name": "LVDiastolicFunction",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mild|Indeterminate",
+    "Moderate|Severe",
+    "Normal"
+   ],
+   "units": "",
+   "label": "LV diastolic function"
+  },
+  {
+   "name": "E|EAvg",
+   "type": "regression",
+   "classes": [],
+   "units": "",
+   "label": "E/e' ratio"
+  },
+  {
+   "name": "RVSP",
+   "type": "regression",
+   "classes": [],
+   "units": "mmHg",
+   "label": "Right ventricular (RV) systolic pressure",
+   "caution": "Estimated from the images alone. The model does not measure the tricuspid jet, so this is an indirect, low-reliability estimate."
+  },
+  {
+   "name": "RVSize",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mildly Increased",
+    "Moderately|Severely Increased",
+    "Normal"
+   ],
+   "units": "",
+   "label": "RV size"
+  },
+  {
+   "name": "RVSystolicFunction",
+   "type": "binary_classification",
+   "classes": [
+    "Decreased",
+    "Normal"
+   ],
+   "units": "",
+   "label": "RV systolic function",
+   "positive": "Decreased",
+   "negative": "Normal"
+  },
+  {
+   "name": "RVIDd",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "RV internal diameter at diastole"
+  },
+  {
+   "name": "TAPSE",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "Tricuspid annular plane systolic excursion"
+  },
+  {
+   "name": "RVSVel",
+   "type": "regression",
+   "classes": [],
+   "units": "cm/s",
+   "label": "RV systolic excursion velocity (RV S')"
+  },
+  {
+   "name": "LASize",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mildly Dilated",
+    "Moderately|Severely Dilated",
+    "Normal"
+   ],
+   "units": "",
+   "label": "Left atrial (LA) size"
+  },
+  {
+   "name": "LAIDs2D",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "LA internal diameter at systole"
+  },
+  {
+   "name": "LAVol",
+   "type": "regression",
+   "classes": [],
+   "units": "cm^3",
+   "label": "LA volume"
+  },
+  {
+   "name": "RASize",
+   "type": "binary_classification",
+   "classes": [
+    "Dilated",
+    "Normal"
+   ],
+   "units": "",
+   "label": "Right atrial (RA) size",
+   "positive": "Dilated",
+   "negative": "Normal"
+  },
+  {
+   "name": "RADimensionM-L(cm)",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "RA major dimension"
+  },
+  {
+   "name": "AVStructure",
+   "type": "binary_classification",
+   "classes": [
+    "Bicuspid",
+    "Normal"
+   ],
+   "units": "",
+   "label": "Bicuspid aortic valve",
+   "positive": "Bicuspid",
+   "negative": "Normal"
+  },
+  {
+   "name": "AVStenosis",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mild|Moderate",
+    "None",
+    "Severe"
+   ],
+   "units": "",
+   "label": "Aortic valve stenosis"
+  },
+  {
+   "name": "AVPkVel(m|s)",
+   "type": "regression",
+   "classes": [],
+   "units": "m/s",
+   "label": "Aortic valve peak velocity"
+  },
+  {
+   "name": "AVRegurg",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mild",
+    "Moderate|Severe",
+    "None|Trace"
+   ],
+   "units": "",
+   "label": "Aortic valve regurgitation"
+  },
+  {
+   "name": "LVOT20mmHg",
+   "type": "binary_classification",
+   "classes": [
+    "0.0",
+    "1.0"
+   ],
+   "units": "",
+   "label": "Elevated LV outflow tract pressure",
+   "positive": "Elevated",
+   "negative": "Not elevated"
+  },
+  {
+   "name": "MVStenosis",
+   "type": "binary_classification",
+   "classes": [
+    "Mild|Moderate|Severe",
+    "None"
+   ],
+   "units": "",
+   "label": "Mitral valve stenosis",
+   "positive": "Mild|Moderate|Severe",
+   "negative": "None"
+  },
+  {
+   "name": "MVRegurgitation",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mild",
+    "Moderate|Severe",
+    "None|Trace"
+   ],
+   "units": "",
+   "label": "Mitral valve regurgitation"
+  },
+  {
+   "name": "TVRegurgitation",
+   "type": "multi-class_classification",
+   "classes": [
+    "Mild",
+    "Moderate|Severe",
+    "None|Trace"
+   ],
+   "units": "",
+   "label": "Tricuspid valve regurgitation"
+  },
+  {
+   "name": "TVPkGrad",
+   "type": "regression",
+   "classes": [],
+   "units": "mmHg",
+   "label": "Tricuspid valve peak gradient",
+   "caution": "Estimated from the images alone. The model does not measure the tricuspid jet, so this is an indirect, low-reliability estimate."
+  },
+  {
+   "name": "RAP-8-or-higher",
+   "type": "binary_classification",
+   "classes": [
+    "0.0",
+    "1.0"
+   ],
+   "units": "",
+   "label": "Elevated RA pressure",
+   "positive": "Elevated (8 mmHg or higher)",
+   "negative": "Not elevated"
+  },
+  {
+   "name": "AORoot",
+   "type": "regression",
+   "classes": [],
+   "units": "cm",
+   "label": "Transverse aortic root diameter"
+  }
+ ]
+}

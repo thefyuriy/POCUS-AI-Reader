@@ -201,6 +201,15 @@ def sanitize_archive_meta(raw: dict) -> dict:
     }
 
 
+def ai_status(clips: list[dict]) -> str:
+    """not_analyzed | partial | analyzed, counting only video clips (stills are never analyzed)."""
+    videos = [c for c in clips if c.get("kind") == "clip"]
+    done = sum(1 for c in videos if isinstance(c.get("results"), dict) and "panecho" in c["results"])
+    if not videos or done == 0:
+        return "not_analyzed"
+    return "analyzed" if done == len(videos) else "partial"
+
+
 def summarize(a: dict) -> dict:
     """The compact record the dashboard needs for one archive."""
     clips = a.get("clips", [])
@@ -224,7 +233,7 @@ def summarize(a: dict) -> dict:
         "views": views,
         "unassigned": sum(1 for c in clips if not c.get("view")),
         "thumb_clip": thumb,
-        "ai_status": "not_analyzed",
+        "ai_status": ai_status(clips),
         "search": search,
     }
 
@@ -411,6 +420,16 @@ class Library:
             folder = self.archive_dir(aid)
             (folder / "media" / f"{cid}{clip['ext']}").unlink(missing_ok=True)
             (folder / "thumbs" / f"{cid}.jpg").unlink(missing_ok=True)
+
+    def set_result(self, aid: str, cid: str, key: str, result: dict) -> None:
+        """Store one model's result in the clip's ``results``."""
+        if len(json.dumps(result)) > MAX_RESULTS_BYTES:
+            raise LibraryError("That result is too large to store.", 413)
+        with self._lock:
+            a = self.read_archive(aid)
+            clip = self._find_clip(a, cid)
+            clip.setdefault("results", {})[key] = result
+            self.write_archive(aid, a)
 
     def set_thumbnail(self, aid: str, cid: str, data: bytes) -> None:
         if len(data) > MAX_THUMB_BYTES:

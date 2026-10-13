@@ -291,3 +291,33 @@ progress { width: 100%; height: 8px; accent-color: var(--doppler); margin-top: 1
   main { padding: 20px 16px 64px; }
   .topbar, .banner { padding-left: 16px; padding-right: 16px; }
 }
+
+/* ---- background jobs and PanEcho results ------------------------------- */
+
+.jobbar { display: flex; align-items: center; gap: 16px; padding: 10px 28px; background: var(--slate); border-top: 1px solid var(--rule); }
+.jobbar[hidden] { display: none; }
+.jobbar .jobline { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.jobbar progress { flex: 0 0 38%; margin: 0; }
+.jobbar.failed { background: var(--amber-wash); }
+.jobbar.failed .jobline span { color: var(--danger); }
+
+.panecho { margin: 18px 0; }
+.panecho h3 { margin: 0 0 8px; font-size: 15px; }
+table.results { border-collapse: collapse; width: 100%; max-width: 640px; font-size: 14px; }
+table.results th, table.results td { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+table.results th { font-weight: 500; color: var(--fog); width: 46%; }
+table.results .val { font-weight: 600; color: var(--chalk); }
+.panecho details { margin-top: 10px; }
+.panecho summary { cursor: pointer; color: var(--fog); font-size: 14px; }
+
+.navrow { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.tilewrap { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.tilewrap .tile { width: 100%; }
+.panecho .legend { margin-top: 12px; }
+.panecho .legend ul { margin: 4px 0 0; padding-left: 18px; max-width: 62ch; }
+
+a.btn { text-decoration: none; display: inline-block; }
+.panecho .decile { margin: 14px 0 0; }
+.panecho .decile h4 { margin: 0 0 4px; font-size: 14px; }
+table.results .conf { font-weight: 600; color: var(--doppler); }
+table.results .caution { color: var(--amber); margin-top: 2px; max-width: 46ch; }

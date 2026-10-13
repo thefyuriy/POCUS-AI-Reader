@@ -24,7 +24,8 @@ from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
-from . import __version__, transfer
+from . import __version__, panecho, transfer
+from .jobs import JobManager
 from .library import (
     UPLOAD_EXTS,
     MAX_LABEL,
@@ -93,7 +94,9 @@ def _uploads(form) -> tuple[list[UploadFile], list[str]]:
 # --------------------------------------------------------------------------
 
 def create_app(library: Library, token: str, port: int, export_dir: Path | None = None,
-               allow_reveal: bool = True) -> Starlette:
+               allow_reveal: bool = True, engine=None, jobs: JobManager | None = None) -> Starlette:
+    engine = engine or panecho.PanEchoEngine(library.root / "models")
+    jobs = jobs or JobManager()
     export_folder = Path(export_dir) if export_dir else default_export_dir(library.root)
 
     async def index(request: Request):
@@ -149,7 +152,11 @@ def create_app(library: Library, token: str, port: int, export_dir: Path | None 
             await form.close()
 
     async def archive_get(request: Request):
-        return JSONResponse(library.get_archive(request.path_params["aid"]))
+        archive = library.get_archive(request.path_params["aid"])
+        results = [c["results"]["panecho"] for c in archive["clips"]
+                   if isinstance(c.get("results"), dict) and "panecho" in c["results"]]
+        archive["panecho_study"] = panecho.aggregate(results, panecho.load_tasks())
+        return JSONResponse(archive)
 
     async def archive_patch(request: Request):
         data = await _json_body(request)
@@ -286,6 +293,49 @@ def create_app(library: Library, token: str, port: int, export_dir: Path | None 
             revealed = True
         return JSONResponse({"revealed": revealed, "path": str(path)})
 
+    async def ai_status(request: Request):
+        return JSONResponse(engine.status())
+
+    async def ai_download(request: Request):
+        if engine.is_installed():
+            raise LibraryError("PanEcho is already downloaded.", 409)
+        job = jobs.start("download", "Downloading PanEcho", engine.download)
+        return JSONResponse(job.public(), status_code=202)
+
+    async def ai_analyze(request: Request):
+        data = await _json_body(request)
+        aid = data.get("archive_id")
+        if not isinstance(aid, str):
+            raise LibraryError("Choose an archive to analyze.", 400)
+        archive = library.get_archive(aid)
+        wanted = data.get("clip_ids")
+        if wanted is not None and not (isinstance(wanted, list) and all(isinstance(i, str) for i in wanted)):
+            raise LibraryError("clip_ids must be a list.", 400)
+        clips = [c for c in archive["clips"] if c.get("kind") == "clip" and (wanted is None or c["id"] in wanted)]
+        if not clips:
+            raise LibraryError("There are no video clips to analyze. Still images are not analyzed.", 400)
+        if not engine.is_installed():
+            raise LibraryError("PanEcho is not downloaded yet.", 409)
+
+        def run(job):
+            job.update(0.0, "Loading PanEcho…")
+            for i, clip in enumerate(clips):
+                job.update(i / len(clips), f"Analyzing clip {i + 1} of {len(clips)}: {clip['filename']}")
+                path, _ = library.media_path(aid, clip["id"])
+                library.set_result(aid, clip["id"], "panecho", engine.analyze_clip(path))
+            job.update(1.0, "Done.")
+
+        title = "Analyzing 1 clip" if len(clips) == 1 else f"Analyzing {len(clips)} clips"
+        job = jobs.start("analyze", title, run, archive_id=aid)
+        return JSONResponse(job.public(), status_code=202)
+
+    async def job_current(request: Request):
+        return JSONResponse(jobs.current())
+
+    async def job_cancel(request: Request):
+        jobs.cancel(request.path_params["jid"])
+        return JSONResponse({"cancelled": True})
+
     async def library_error(request: Request, exc: LibraryError):
         return JSONResponse({"detail": str(exc)}, status_code=exc.status)
 
@@ -302,6 +352,11 @@ def create_app(library: Library, token: str, port: int, export_dir: Path | None 
         Route("/api/archives/{aid}/clips/{cid}", clip_patch, methods=["PATCH"]),
         Route("/api/archives/{aid}/clips/{cid}", clip_delete, methods=["DELETE"]),
         Route("/api/archives/{aid}/clips/{cid}/thumbnail", thumb_put, methods=["PUT"]),
+        Route("/api/ai/status", ai_status),
+        Route("/api/ai/download", ai_download, methods=["POST"]),
+        Route("/api/ai/analyze", ai_analyze, methods=["POST"]),
+        Route("/api/jobs/current", job_current),
+        Route("/api/jobs/{jid}/cancel", job_cancel, methods=["POST"]),
         Route("/api/export", export, methods=["POST"]),
         Route("/api/import", import_, methods=["POST"]),
         Route("/api/reveal", reveal, methods=["POST"]),
@@ -321,13 +376,13 @@ def create_app(library: Library, token: str, port: int, export_dir: Path | None 
 # --------------------------------------------------------------------------
 
 def start_background_server(library: Library, token: str, export_dir: Path | None = None,
-                            port: int = 0, allow_reveal: bool = True):
+                            port: int = 0, allow_reveal: bool = True, engine=None):
     """Start the server on 127.0.0.1 in a thread. Returns (server, thread, port)."""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("127.0.0.1", port))
     actual_port = sock.getsockname()[1]
-    app = create_app(library, token, actual_port, export_dir, allow_reveal)
+    app = create_app(library, token, actual_port, export_dir, allow_reveal, engine=engine)
     server = uvicorn.Server(uvicorn.Config(app, log_level="warning", lifespan="off", access_log=False))
     thread = threading.Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
     thread.start()

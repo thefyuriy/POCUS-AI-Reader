@@ -11,15 +11,17 @@
     <div class="topbar">
       <a class="wordmark" href="#/">POCUS AI Reader</a>
       <nav class="topnav" aria-label="Library tools">
+        <a class="btn" id="btn-home" href="#/">All exams</a>
         <button class="btn quiet" id="btn-import" type="button">Import library</button>
         <button class="btn quiet" id="btn-export" type="button">Export library</button>
         <button class="btn quiet" id="btn-folder" type="button">Library folder</button>
       </nav>
     </div>
     <p class="banner" role="note">
-      For research and teaching only, not for clinical decisions. The AI models used here were trained on
+      For research and teaching only, not for clinical decisions. The AI model used here was trained on
       consultative echocardiograms, not point-of-care clips.
     </p>
+    <div id="jobbar" class="jobbar" role="status" hidden></div>
   </header>
 
   <main id="app" tabindex="-1"></main>

@@ -75,13 +75,13 @@ class Client:
 class ServerFixture:
     """Starts a real server on a free port with a throwaway library."""
 
-    def __init__(self):
+    def __init__(self, engine=None):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.library = Library(self.root / "library")
         self.export_dir = self.root / "exports"
         self.server, self.thread, self.port = start_background_server(
-            self.library, TOKEN, export_dir=self.export_dir, allow_reveal=False
+            self.library, TOKEN, export_dir=self.export_dir, allow_reveal=False, engine=engine
         )
         self.client = Client(self.port)
 
