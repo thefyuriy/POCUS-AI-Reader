@@ -1,0 +1,34 @@
+name: Build Mac app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install starlette uvicorn python-multipart
+      - run: python -m unittest discover -s tests -t .
+
+  build-dmg:
+    needs: test
+    runs-on: macos-14   # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pyinstaller --noconfirm packaging/pocus_ai_reader.spec
+      - run: bash packaging/build_dmg.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: POCUS-AI-Reader-dmg
+          path: dist/POCUS-AI-Reader.dmg
