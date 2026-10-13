@@ -26,7 +26,7 @@ NEVER use formal/informal or official/unofficial to describe any distinction in 
 - Q13: AI runs only after the user clicks Analyze. Q14: background jobs with a progress bar.
 
 - Q15 (asked, not yet answered): PanEcho weights download. Implemented as ask first: Analyze shows a dialog (505 MB, CC BY-NC-SA, research/teaching only) and downloads only after the user clicks. Confirm or change.
-- Q16: C. EchoPrime is dropped. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai academic-research-only licence with no transfer of the software or derivatives; nothing from it may enter this public repo. Next: best candidate is echonet/RV (EchoNet-RV, A4C RVFAC + segmentation) but it has NO licence file, so written permission from the authors is needed first (Q17: owner to decide whether to email them). See docs/STAGES.md.
+- Q16: C. EchoPrime is dropped. Its README says MIT but its LICENSE file (commit 03874a5) is a Cedars-Sinai academic-research-only licence with no transfer of the software or derivatives; nothing from it may enter this public repo. Next: best candidate is echonet/RV (EchoNet-RV, A4C RVFAC + segmentation) but it has NO licence file, so written permission from the authors is needed first (Q17: owner said yes; email drafted 2026-10-13, waiting for the authors' reply. Do not build anything on EchoNet-RV until they answer in writing). See docs/STAGES.md.
 
 ## Open verification items
 PanEcho speed on Mac (CPU: about 3 s per clip on a 4-core Linux box; Mac untested); PanEcho outputs have not been checked against real point-of-care clips (only test patterns were run); resizing the whole frame to 224x224 is our choice, not the authors'; GitHub Actions macOS minutes (public repo, likely fine).
