@@ -280,7 +280,7 @@ function panechoResults(tasks, data, heading) {
     measures.length ? h("div", { class: "decile" }, h("h4", null, "Measurements (the model gives no confidence for these)"),
       h("table", { class: "results" }, h("tbody", null, measures.map((m) =>
         h("tr", null, h("th", { scope: "row" }, m.task.label),
-          h("td", null, h("span", { class: "val" }, m.text), m.task.caution ? h("div", { class: "caution small" }, m.task.caution) : null))))))) : null,
+          h("td", null, h("span", { class: "val" }, m.text), m.task.caution ? h("div", { class: "caution small" }, m.task.caution) : null)))))) : null,
     h("p", { class: "muted small" }, "Model output for teaching and research, not a diagnosis. Check it against the clip yourself."),
     h("details", { class: "legend" }, h("summary", null, "What does “confident” mean here?"),
       h("p", { class: "muted small" }, "It is the model’s own probability for its top answer. It shows how sure the model is, not how often it is right, and it says nothing about how severe the finding is."),
