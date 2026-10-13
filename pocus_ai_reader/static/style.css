@@ -320,3 +320,4 @@ a.btn { text-decoration: none; display: inline-block; }
 .panecho .decile { margin: 14px 0 0; }
 .panecho .decile h4 { margin: 0 0 4px; font-size: 14px; }
 table.results .conf { font-weight: 600; color: var(--doppler); }
+table.results .caution { color: var(--amber); margin-top: 2px; max-width: 46ch; }

@@ -164,7 +164,8 @@
    "type": "regression",
    "classes": [],
    "units": "mmHg",
-   "label": "Right ventricular (RV) systolic pressure"
+   "label": "Right ventricular (RV) systolic pressure",
+   "caution": "Estimated from the images alone. The model does not measure the tricuspid jet, so this is an indirect, low-reliability estimate."
   },
   {
    "name": "RVSize",
@@ -346,7 +347,8 @@
    "type": "regression",
    "classes": [],
    "units": "mmHg",
-   "label": "Tricuspid valve peak gradient"
+   "label": "Tricuspid valve peak gradient",
+   "caution": "Estimated from the images alone. The model does not measure the tricuspid jet, so this is an indirect, low-reliability estimate."
   },
   {
    "name": "RAP-8-or-higher",
