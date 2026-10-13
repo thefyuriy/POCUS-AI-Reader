@@ -230,7 +230,7 @@ function taskText(task, r) {
     return { main: `${Math.abs(r.value) >= 100 ? r.value.toFixed(0) : r.value.toFixed(1)}${units}` };
   }
   if (task.type === "binary_classification" && Number.isFinite(r.p)) {
-    return { main: `${niceClass(task.positive)}: ${pct(r.p)}`, detail: "model probability" };
+    return { main: `${pct(r.p)} probability`, detail: `of “${niceClass(task.positive)}”` };
   }
   if (r.probs && typeof r.probs === "object") {
     const entries = Object.entries(r.probs).filter(([, v]) => Number.isFinite(v)).sort((a, b) => b[1] - a[1]);
@@ -260,7 +260,14 @@ function panechoResults(tasks, data, heading) {
     h("h3", null, heading),
     resultRows(tasks, results, key),
     rest.length ? h("details", null, h("summary", null, `All other measurements (${rest.length})`), resultRows(tasks, results, rest)) : null,
-    h("p", { class: "muted small" }, "Model output for teaching and research, not a diagnosis. Check it against the clip yourself."));
+    h("p", { class: "muted small" }, "Model output for teaching and research, not a diagnosis. Check it against the clip yourself."),
+    h("details", { class: "legend" }, h("summary", null, "What do the percentages mean?"),
+      h("p", { class: "muted small" }, "Each percentage is the model’s own probability for that answer. It is not a confidence or accuracy score, and it says nothing about how severe the finding is."),
+      h("ul", { class: "muted small" },
+        h("li", null, "Category results (for example RV size) split 100% across the possible answers. The top answer is shown first."),
+        h("li", null, "Yes/no findings (for example RV systolic function) show the probability that the finding is present."),
+        h("li", null, "Measurements (EF, TAPSE, RVSP…) are single estimated values with no error range. A percent sign there is part of the unit, for example EF in %."),
+        h("li", null, "These probabilities were not calibrated on point-of-care clips, and neural-network probabilities are often over-confident."))));
 }
 
 async function aiTasks() {
@@ -323,14 +330,26 @@ function archiveTile(a) {
       h("div", { class: "line" }, { analyzed: "PanEcho analyzed", partial: "PanEcho run on some clips" }[a.ai_status] || "AI not run yet")));
 }
 
+async function deleteClip(aid, clip) {
+  if (!(await confirmDialog({ title: "Delete this clip?", body: `“${clip.filename}” will be removed from this computer. This can't be undone.`, confirmLabel: "Delete clip", danger: true }))) return false;
+  try {
+    await api("DELETE", `/api/archives/${aid}/clips/${clip.id}`);
+    toast("Clip deleted.");
+    return true;
+  } catch (e) { toast(e.message, { error: true }); return false; }
+}
+
 function clipTile(archive, clip) {
   const left = [clip.view ? annotation(clip.view) : annotation("no view", true)];
   const right = clip.kind === "still" ? [annotation("still")] : [];
-  return h("a", { class: "tile", href: `#/archive/${archive.id}/clip/${clip.id}` },
-    frameBox(archive.id, clip, left, right),
-    h("div", { class: "caption" },
-      h("div", { class: "name" }, clip.filename),
-      clip.tags.length ? h("div", { class: "line" }, clip.tags.map((t) => `#${t}`).join("  ")) : null));
+  return h("div", { class: "tilewrap" },
+    h("a", { class: "tile", href: `#/archive/${archive.id}/clip/${clip.id}` },
+      frameBox(archive.id, clip, left, right),
+      h("div", { class: "caption" },
+        h("div", { class: "name" }, clip.filename),
+        clip.tags.length ? h("div", { class: "line" }, clip.tags.map((t) => `#${t}`).join("  ")) : null)),
+    h("button", { class: "btn quiet small danger", type: "button", "aria-label": `Delete ${clip.filename}`,
+      onclick: async () => { if (await deleteClip(archive.id, clip)) render(); } }, "Delete clip"));
 }
 
 /* -------------------------------------------------------- thumbnails (client) */
@@ -649,7 +668,7 @@ async function renderArchive(aid) {
     ? panechoResults(await aiTasks(), a.panecho_study, `PanEcho: whole archive (average of ${plural(a.panecho_study.clips, "clip", "clips")})`)
     : null;
   appEl.replaceChildren(
-    h("a", { class: "back", href: "#/" }, "Back to library"),
+    h("div", { class: "navrow" }, h("a", { class: "btn", href: "#/" }, "← All exams")),
     title,
     h("p", { class: "muted" }, `Created ${formatDate(a.created)}. ${plural(clips, "clip", "clips")}${stills ? `, ${plural(stills, "still", "stills")}` : ""}. `, saved),
     h("div", { class: "meta-row" },
@@ -756,13 +775,9 @@ async function renderViewer(aid, cid) {
     tagEditor(clip.tags, (tags) => save({ tags })),
     h("div", null, h("span", { class: "field-label" }, "Notes"), notes, saved),
     h("div", null, h("button", { class: "btn danger small", type: "button", onclick: async () => {
-      if (!(await confirmDialog({ title: "Delete this clip?", body: `“${clip.filename}” will be removed from this computer. This can't be undone.`, confirmLabel: "Delete clip", danger: true }))) return;
-      try {
-        await api("DELETE", `/api/archives/${aid}/clips/${cid}`);
-        toast("Clip deleted.");
-        const after = next || prev;
-        location.hash = after ? `#/archive/${aid}/clip/${after.id}` : `#/archive/${aid}`;
-      } catch (e) { toast(e.message, { error: true }); }
+      if (!(await deleteClip(aid, clip))) return;
+      const after = next || prev;
+      location.hash = after ? `#/archive/${aid}/clip/${after.id}` : `#/archive/${aid}`;
     } }, "Delete this clip")),
     h("div", { class: "ai" },
       h("h2", null, "AI interpretation"),
@@ -776,7 +791,9 @@ async function renderViewer(aid, cid) {
       h("p", { class: "caveat" }, "Both models were trained on consultative echocardiograms. Their accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
 
   appEl.replaceChildren(
-    h("a", { class: "back", href: `#/archive/${aid}` }, `Back to ${a.label}`),
+    h("div", { class: "navrow" },
+      h("a", { class: "btn", href: `#/archive/${aid}` }, "← Back to this exam"),
+      h("a", { class: "btn", href: "#/" }, "All exams")),
     h("div", { class: "viewer" }, stage, side));
 }
 
@@ -786,7 +803,7 @@ function renderError(err) {
   appEl.replaceChildren(h("div", { class: "empty" },
     h("h2", null, "That page can't be shown"),
     h("p", null, err.message),
-    h("a", { class: "btn primary", href: "#/" }, "Back to library")));
+    h("a", { class: "btn primary", href: "#/" }, "All exams")));
 }
 
 async function render() {
