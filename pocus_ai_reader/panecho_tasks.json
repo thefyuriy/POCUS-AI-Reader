@@ -10,7 +10,8 @@
    ],
    "units": "",
    "label": "Pericardial effusion",
-   "positive": "Mild, moderate or severe"
+   "positive": "Mild, moderate or severe",
+   "negative": "None or trace"
   },
   {
    "name": "EF",
@@ -24,7 +25,7 @@
    "type": "regression",
    "classes": [],
    "units": "%",
-   "label": "Global longitudinal strain. Actual value is -1 times the model output"
+   "label": "Global longitudinal strain (GLS)"
   },
   {
    "name": "LVEDV",
@@ -67,7 +68,8 @@
    ],
    "units": "",
    "label": "Any level of LV hypertrophy (increased wall thickness)",
-   "positive": "Increased"
+   "positive": "Increased",
+   "negative": "Normal"
   },
   {
    "name": "LVWallThickness-increased-modsev",
@@ -78,7 +80,8 @@
    ],
    "units": "",
    "label": "Moderate or greater LV hypertrophy (increased wall thickness)",
-   "positive": "Moderately or severely increased"
+   "positive": "Moderately or severely increased",
+   "negative": "Normal or mildly increased"
   },
   {
    "name": "LVSystolicFunction",
@@ -100,7 +103,8 @@
    ],
    "units": "",
    "label": "LV wall motion abnormalities",
-   "positive": "Present"
+   "positive": "Present",
+   "negative": "None"
   },
   {
    "name": "IVSd",
@@ -182,7 +186,8 @@
    ],
    "units": "",
    "label": "RV systolic function",
-   "positive": "Decreased"
+   "positive": "Decreased",
+   "negative": "Normal"
   },
   {
    "name": "RVIDd",
@@ -239,7 +244,8 @@
    ],
    "units": "",
    "label": "Right atrial (RA) size",
-   "positive": "Dilated"
+   "positive": "Dilated",
+   "negative": "Normal"
   },
   {
    "name": "RADimensionM-L(cm)",
@@ -257,7 +263,8 @@
    ],
    "units": "",
    "label": "Bicuspid aortic valve",
-   "positive": "Bicuspid"
+   "positive": "Bicuspid",
+   "negative": "Normal"
   },
   {
    "name": "AVStenosis",
@@ -297,7 +304,8 @@
    ],
    "units": "",
    "label": "Elevated LV outflow tract pressure",
-   "positive": "Elevated"
+   "positive": "Elevated",
+   "negative": "Not elevated"
   },
   {
    "name": "MVStenosis",
@@ -308,7 +316,8 @@
    ],
    "units": "",
    "label": "Mitral valve stenosis",
-   "positive": "Mild|Moderate|Severe"
+   "positive": "Mild|Moderate|Severe",
+   "negative": "None"
   },
   {
    "name": "MVRegurgitation",
@@ -348,7 +357,8 @@
    ],
    "units": "",
    "label": "Elevated RA pressure",
-   "positive": "Elevated (8 mmHg or higher)"
+   "positive": "Elevated (8 mmHg or higher)",
+   "negative": "Not elevated"
   },
   {
    "name": "AORoot",

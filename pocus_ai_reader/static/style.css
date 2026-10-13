@@ -317,3 +317,6 @@ table.results .val { font-weight: 600; color: var(--chalk); }
 .panecho .legend ul { margin: 4px 0 0; padding-left: 18px; max-width: 62ch; }
 
 a.btn { text-decoration: none; display: inline-block; }
+.panecho .decile { margin: 14px 0 0; }
+.panecho .decile h4 { margin: 0 0 4px; font-size: 14px; }
+table.results .conf { font-weight: 600; color: var(--doppler); }

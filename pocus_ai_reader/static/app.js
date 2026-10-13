@@ -218,54 +218,74 @@ async function startAnalyze(archiveId, clipIds, afterDownload = false) {
 
 /* ---------------------------------------------------------- PanEcho results */
 
-const KEY_TASKS = ["EF", "LVSystolicFunction", "LVSize", "RVSize", "RVSystolicFunction", "RASize",
-  "RAP-8-or-higher", "pericardial-effusion", "TAPSE", "RVSP", "TVRegurgitation"];
 const pct = (p) => `${Math.round(p * 100)}%`;
 const niceClass = (c) => String(c).replace(/\|/g, " / ");
 
-function taskText(task, r) {
+/* What the model "calls" for a category or yes/no task, and the probability it gives that answer. */
+function taskCall(task, r) {
   if (!r || typeof r !== "object") return null;
-  if (task.type === "regression" && Number.isFinite(r.value)) {
-    const units = task.units && task.units !== "N/A" ? ` ${task.units}` : "";
-    return { main: `${Math.abs(r.value) >= 100 ? r.value.toFixed(0) : r.value.toFixed(1)}${units}` };
-  }
   if (task.type === "binary_classification" && Number.isFinite(r.p)) {
-    return { main: `${pct(r.p)} probability`, detail: `of “${niceClass(task.positive)}”` };
+    const present = r.p >= 0.5;
+    return { answer: niceClass(present ? task.positive : task.negative), conf: present ? r.p : 1 - r.p, others: "" };
   }
-  if (r.probs && typeof r.probs === "object") {
+  if (task.type === "multi-class_classification" && r.probs && typeof r.probs === "object") {
     const entries = Object.entries(r.probs).filter(([, v]) => Number.isFinite(v)).sort((a, b) => b[1] - a[1]);
     if (!entries.length) return null;
-    return { main: `${niceClass(entries[0][0])}: ${pct(entries[0][1])}`, detail: entries.slice(1).map(([k, v]) => `${niceClass(k)} ${pct(v)}`).join(", ") };
+    return { answer: niceClass(entries[0][0]), conf: entries[0][1],
+      others: entries.slice(1).map(([k, v]) => `${niceClass(k)} ${pct(v)}`).join(", ") };
   }
   return null;
 }
 
-function resultRows(tasks, results, names) {
-  return h("table", { class: "results" }, h("tbody", null, names.map((name) => {
-    const task = tasks.find((t) => t.name === name);
-    const text = task && taskText(task, results[name]);
-    if (!text) return null;
-    return h("tr", null, h("th", { scope: "row" }, task.label),
-      h("td", null, h("span", { class: "val" }, text.main), text.detail ? h("span", { class: "muted small" }, ` ${text.detail}`) : null));
-  })));
+function measurementText(task, r) {
+  if (!r || !Number.isFinite(r.value)) return null;
+  const units = task.units && task.units !== "N/A" ? ` ${task.units}` : "";
+  return `${Math.abs(r.value) >= 100 ? r.value.toFixed(0) : r.value.toFixed(1)}${units}`;
+}
+
+function callTable(rows) {
+  return h("table", { class: "results" }, h("tbody", null, rows.map((row) =>
+    h("tr", null, h("th", { scope: "row" }, row.task.label),
+      h("td", null, h("span", { class: "val" }, row.answer), h("span", { class: "conf" }, ` ${pct(row.conf)}`),
+        row.others ? h("span", { class: "muted small" }, `  also: ${row.others}`) : null)))));
 }
 
 function panechoResults(tasks, data, heading) {
   const results = (data && data.tasks) || {};
-  const all = tasks.map((t) => t.name).filter((n) => results[n]);
-  if (!all.length) return null;
-  const key = KEY_TASKS.filter((n) => results[n]);
-  const rest = all.filter((n) => !KEY_TASKS.includes(n));
+  const calls = [];
+  const measures = [];
+  for (const task of tasks) {
+    const r = results[task.name];
+    if (!r) continue;
+    if (task.type === "regression") {
+      const text = measurementText(task, r);
+      if (text) measures.push({ task, text });
+    } else {
+      const call = taskCall(task, r);
+      if (call) calls.push({ task, ...call });
+    }
+  }
+  if (!calls.length && !measures.length) return null;
+
+  // Deciles of the probability the model gives its own top answer, highest first.
+  const groups = [];
+  for (let d = 9; d >= 0; d--) {
+    const rows = calls.filter((c) => Math.min(9, Math.floor(c.conf * 10)) === d).sort((a, b) => b.conf - a.conf);
+    if (rows.length) groups.push(h("div", { class: "decile" }, h("h4", null, `${d * 10}–${d * 10 + 10}% confident`), callTable(rows)));
+  }
   return h("div", { class: "panecho" },
     h("h3", null, heading),
-    resultRows(tasks, results, key),
-    rest.length ? h("details", null, h("summary", null, `All other measurements (${rest.length})`), resultRows(tasks, results, rest)) : null,
+    h("p", { class: "muted small" }, "Findings are grouped by how confident the model is in its own answer: the probability it gives its top answer."),
+    ...groups,
+    measures.length ? h("div", { class: "decile" }, h("h4", null, "Measurements (the model gives no confidence for these)"),
+      h("table", { class: "results" }, h("tbody", null, measures.map((m) =>
+        h("tr", null, h("th", { scope: "row" }, m.task.label), h("td", null, h("span", { class: "val" }, m.text))))))) : null,
     h("p", { class: "muted small" }, "Model output for teaching and research, not a diagnosis. Check it against the clip yourself."),
-    h("details", { class: "legend" }, h("summary", null, "What do the percentages mean?"),
-      h("p", { class: "muted small" }, "Each percentage is the model’s own probability for that answer. It is not a confidence or accuracy score, and it says nothing about how severe the finding is."),
+    h("details", { class: "legend" }, h("summary", null, "What does “confident” mean here?"),
+      h("p", { class: "muted small" }, "It is the model’s own probability for its top answer. It shows how sure the model is, not how often it is right, and it says nothing about how severe the finding is."),
       h("ul", { class: "muted small" },
-        h("li", null, "Category results (for example RV size) split 100% across the possible answers. The top answer is shown first."),
-        h("li", null, "Yes/no findings (for example RV systolic function) show the probability that the finding is present."),
+        h("li", null, "Category results (for example RV size) split 100% across the possible answers; the top answer and its percentage are shown, with the others after “also”."),
+        h("li", null, "Yes/no findings (for example RV systolic function) show the model’s call and its probability. If the model says 30% decreased, the call is “Normal” at 70%."),
         h("li", null, "Measurements (EF, TAPSE, RVSP…) are single estimated values with no error range. A percent sign there is part of the unit, for example EF in %."),
         h("li", null, "These probabilities were not calibrated on point-of-care clips, and neural-network probabilities are often over-confident."))));
 }
@@ -682,8 +702,8 @@ async function renderArchive(aid) {
         if (!(await confirmDialog({ title: "Delete this archive?", body: `“${a.label}” and all ${a.clips.length} of its files will be removed from this computer. This can't be undone.`, confirmLabel: "Delete archive", danger: true }))) return;
         try { await api("DELETE", `/api/archives/${aid}`); toast("Archive deleted."); location.hash = "#/"; } catch (e) { toast(e.message, { error: true }); }
       } }, "Delete archive")),
-    ...(study ? [study] : []),   // replaceChildren turns null into the text "null"
-    sheet);
+    sheet,
+    ...(study ? [study] : []));   // replaceChildren turns null into the text "null"
 }
 
 /* ----------------------------------------------------------------- viewer */

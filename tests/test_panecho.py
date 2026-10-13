@@ -38,6 +38,7 @@ class TaskTableTests(unittest.TestCase):
             self.assertTrue(t["label"])
             if t["type"] == "binary_classification":
                 self.assertTrue(t["positive"])
+                self.assertTrue(t["negative"])  # the model's call when the probability is under 50%
             if t["type"] == "multi-class_classification":
                 self.assertGreaterEqual(len(t["classes"]), 3)
 
