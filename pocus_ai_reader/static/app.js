@@ -130,7 +130,7 @@ function openModal(content, { onClose } = {}) {
 function confirmDialog({ title, body, confirmLabel, danger = false }) {
   return new Promise((resolve) => {
     let modal;
-    const done = (v) => { modal.close(); resolve(v); };
+    const done = (v) => { resolve(v); modal.close(); };  // resolve first: close() fires onClose, which resolves false
     const box = h("div", { "aria-label": title },
       h("h2", null, title),
       h("p", { class: "muted" }, body),
@@ -139,6 +139,11 @@ function confirmDialog({ title, body, confirmLabel, danger = false }) {
         h("button", { class: `btn ${danger ? "danger" : "primary"}`, type: "button", onclick: () => done(true) }, confirmLabel)));
     modal = openModal(box, { onClose: () => resolve(false) });
   });
+}
+
+function analyze(scope) {
+  // Stage 2 (PanEcho) is not built yet. The button exists so the workflow is visible; it never runs anything on its own.
+  toast(`Analyze ${scope} is not available yet: the AI models are not installed in this version. PanEcho comes next.`);
 }
 
 /* ------------------------------------------------------------- components */
@@ -527,6 +532,7 @@ async function renderArchive(aid) {
       tagEditor(a.tags, (tags) => save({ tags }))),
     h("div", { class: "actions" },
       h("button", { class: "btn primary", type: "button", onclick: chooseFiles }, "Add files"),
+      h("button", { class: "btn primary", type: "button", onclick: () => analyze("archive") }, "Analyze archive"),
       h("button", { class: "btn", type: "button", onclick: () => exportArchives([aid]) }, "Export this archive"),
       h("button", { class: "btn danger", type: "button", onclick: async () => {
         if (!(await confirmDialog({ title: "Delete this archive?", body: `“${a.label}” and all ${a.clips.length} of its files will be removed from this computer. This can't be undone.`, confirmLabel: "Delete archive", danger: true }))) return;
@@ -620,14 +626,24 @@ async function renderViewer(aid, cid) {
     h("div", null, h("span", { class: "field-label" }, "View"), viewSelect),
     tagEditor(clip.tags, (tags) => save({ tags })),
     h("div", null, h("span", { class: "field-label" }, "Notes"), notes, saved),
+    h("div", null, h("button", { class: "btn danger small", type: "button", onclick: async () => {
+      if (!(await confirmDialog({ title: "Delete this clip?", body: `“${clip.filename}” will be removed from this computer. This can't be undone.`, confirmLabel: "Delete clip", danger: true }))) return;
+      try {
+        await api("DELETE", `/api/archives/${aid}/clips/${cid}`);
+        toast("Clip deleted.");
+        const after = next || prev;
+        location.hash = after ? `#/archive/${aid}/clip/${after.id}` : `#/archive/${aid}`;
+      } catch (e) { toast(e.message, { error: true }); }
+    } }, "Delete this clip")),
     h("div", { class: "ai" },
       h("h2", null, "AI interpretation"),
-      h("p", { class: "muted small" }, "Not turned on in this version."),
+      h("button", { class: "btn primary", type: "button", onclick: () => analyze("clip") }, "Analyze this clip"),
+      h("p", { class: "muted small" }, "AI is not turned on in this version. It will only run when you click Analyze."),
       h("div", { class: "model" }, h("h3", null, "PanEcho"),
         h("p", null, "Reads every view in the archive and reports left and right heart findings. Planned for the next release.")),
       h("div", { class: "model" }, h("h3", null, "EchoPrime"),
         h("p", null, "A second opinion from a different model, with its own view check. Planned after PanEcho.")),
-      h("p", { class: "caveat" }, "Both models were trained on formal echocardiograms. Their accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
+      h("p", { class: "caveat" }, "Both models were trained on consultative echocardiograms. Their accuracy on point-of-care clips has not been validated, so treat results as a teaching aid.")));
 
   appEl.replaceChildren(
     h("a", { class: "back", href: `#/archive/${aid}` }, `Back to ${a.label}`),
