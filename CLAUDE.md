@@ -19,6 +19,9 @@ Planned AI: PanEcho (Stage 2) and EchoPrime (Stage 3) run locally, shown side by
 - Commits end with `Co-Authored-By:` and `Claude-Session:` lines; PRs per the session reminder.
 - Repo is public. Models are downloaded on first launch, never bundled. Default library outside iCloud-synced folders.
 
+## Medical wording (owner rule)
+NEVER use formal/informal or official/unofficial to describe any distinction in medicine, in UI text, docs or replies. Say "consultative echocardiogram" (vs point-of-care). `tests/test_wording.py` enforces this for user-facing files.
+
 ## Confirmed decisions
 - Q13: AI runs only after the user clicks Analyze. Q14: background jobs with a progress bar.
 
